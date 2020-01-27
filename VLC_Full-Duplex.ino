@@ -7,17 +7,17 @@
 /*          CONSTANTS          */
 /*                             */
 /*******************************/
-// Arduino States
-#define ARDUINO_LOADING 1
-#define ARDUINO_WAITING_FOR_TX_DATA 2
-#define ARDUINO_WAITING_FOR_CHECK_IN 3
-#define ARDUINO_TX_STARTED 4
-#define ARDUINO_TX_ENDED 5
-#define ARDUINO_RX_WAITING 6
-#define ARDUINO_RX_STARTING 7
-#define ARDUINO_RX_STARTED 8
-#define ARDUINO_RX_ENDED 9
-#define ARDUINO_EXIT 10
+// Micro States
+#define MICRO_LOADING 1
+#define MICRO_WAITING_FOR_TX_DATA 2
+#define MICRO_WAITING_FOR_CHECK_IN 3
+#define MICRO_TX_STARTED 4
+#define MICRO_TX_ENDED 5
+#define MICRO_RX_WAITING 6
+#define MICRO_RX_STARTING 7
+#define MICRO_RX_STARTED 8
+#define MICRO_RX_ENDED 9
+#define MICRO_EXIT 10
 // Android states
 #define ANDROID_LOADING 11
 #define ANDROID_WAITING_FOR_START 12
@@ -33,26 +33,26 @@
 
 String stateToString(int state) {
   switch (state) {
-  // ARDUINO
-    case ARDUINO_LOADING:
+  // MICRO
+    case MICRO_LOADING:
       return "LOADING";
-    case ARDUINO_WAITING_FOR_TX_DATA:
+    case MICRO_WAITING_FOR_TX_DATA:
       return "WAITING_FOR_TX_DATA";
-    case ARDUINO_WAITING_FOR_CHECK_IN:
+    case MICRO_WAITING_FOR_CHECK_IN:
       return "WAITING_FOR_CHECK_IN";
-    case ARDUINO_TX_STARTED:
+    case MICRO_TX_STARTED:
       return "TX_STARTED";
-    case ARDUINO_TX_ENDED:
+    case MICRO_TX_ENDED:
       return "TX_ENDED";
-    case ARDUINO_RX_WAITING:
+    case MICRO_RX_WAITING:
       return "RX_WAITING";
-    case ARDUINO_RX_STARTING:
+    case MICRO_RX_STARTING:
       return "RX_STARTING";
-    case ARDUINO_RX_STARTED:
+    case MICRO_RX_STARTED:
       return "RX_STARTED";
-    case ARDUINO_RX_ENDED:
+    case MICRO_RX_ENDED:
       return "RX_ENDED";
-    case ARDUINO_EXIT:
+    case MICRO_EXIT:
       return "EXIT";
     // ANDROID
     case ANDROID_LOADING:
@@ -107,7 +107,7 @@ int initialLumAverage;
 // Start and end sequence
 char startSeq = B11100111;
 char endSeq = B11111111;
-// Arduino State
+// Micro State
 int state;
 // Tx data
 String txData;
@@ -229,7 +229,7 @@ bool firebaseSetString(const String path, const String value) {
 }
 
 int setState(int newState) {
-  if (firebaseSetString("/variables/arduino/state", stateToString(newState))) {
+  if (firebaseSetString("/variables/micro/state", stateToString(newState))) {
     state = newState;
   }
   return state;
@@ -296,7 +296,7 @@ void setup(void) {
   wifiSetup(); // Initialize WiFi connection
   firebaseSetup(); // Initialize Firebase database
 
-  setState(ARDUINO_LOADING); // Initialize state
+  setState(MICRO_LOADING); // Initialize state
 
   Serial.println("********* SETUP End *********");
 
@@ -306,36 +306,36 @@ void setup(void) {
 void loop(void) {
 
   switch (state) {
-    case ARDUINO_LOADING:
-      Serial.println("ARDUINO_LOADING");
+    case MICRO_LOADING:
+      Serial.println("MICRO_LOADING");
       loading();
       break;
-    case ARDUINO_WAITING_FOR_TX_DATA:
-      Serial.println("ARDUINO_WAITING_FOR_TX_DATA");
+    case MICRO_WAITING_FOR_TX_DATA:
+      Serial.println("MICRO_WAITING_FOR_TX_DATA");
       waiting_for_tx_data();
       break;
-    case ARDUINO_WAITING_FOR_CHECK_IN:
-      Serial.println("ARDUINO_WAITING_FOR_CHECK_IN");
+    case MICRO_WAITING_FOR_CHECK_IN:
+      Serial.println("MICRO_WAITING_FOR_CHECK_IN");
       waiting_for_check_in();
       break;
-    case ARDUINO_TX_STARTED:
-      Serial.println("ARDUINO_TX_STARTED");
+    case MICRO_TX_STARTED:
+      Serial.println("MICRO_TX_STARTED");
       startTx();
       break;
-    case ARDUINO_TX_ENDED:
-      Serial.println("ARDUINO_TX_ENDED");
+    case MICRO_TX_ENDED:
+      Serial.println("MICRO_TX_ENDED");
       endTx();
       break;
-    case ARDUINO_RX_STARTING:
-      Serial.println("ARDUINO_RX_STARTING");
+    case MICRO_RX_STARTING:
+      Serial.println("MICRO_RX_STARTING");
       startRx();
       break;
-    case ARDUINO_RX_ENDED:
-      Serial.println("ARDUINO_RX_ENDED");
+    case MICRO_RX_ENDED:
+      Serial.println("MICRO_RX_ENDED");
       endRx();
       break;
-    case ARDUINO_EXIT:
-      Serial.println("ARDUINO_EXIT");
+    case MICRO_EXIT:
+      Serial.println("MICRO_EXIT");
       break;
   }
 
@@ -347,7 +347,7 @@ void loop(void) {
 /*                             */
 /*******************************/
 void loading(void) {
-  setState(ARDUINO_WAITING_FOR_TX_DATA);
+  setState(MICRO_WAITING_FOR_TX_DATA);
 }
 
 void waiting_for_tx_data(void) {
@@ -356,11 +356,11 @@ void waiting_for_tx_data(void) {
     txMode = firebaseGetString("/variables/common/tx_mode");
     txData = firebaseGetString("/variables/common/tx_data");
     txRate = firebaseGetInt("/variables/common/tx_rate");
-    if (txMode == "ARDUINO_ANDROID") {
-      setState(ARDUINO_WAITING_FOR_CHECK_IN);
-    } else if (txMode == "ANDROID_ARDUINO") {
+    if (txMode == "MICRO_ANDROID") {
+      setState(MICRO_WAITING_FOR_CHECK_IN);
+    } else if (txMode == "ANDROID_MICRO") {
       setupInitialLuminance();
-      setState(ARDUINO_RX_STARTING);
+      setState(MICRO_RX_STARTING);
     }
   }
 }
@@ -368,7 +368,7 @@ void waiting_for_tx_data(void) {
 void waiting_for_check_in(void) {
   String androidState = firebaseGetString("/variables/android/state");
   if (androidState == stateToString(ANDROID_RX_STARTING)) {
-    setState(ARDUINO_TX_STARTED);
+    setState(MICRO_TX_STARTED);
   }
 }
 
@@ -377,11 +377,11 @@ void startTx(void) {
   size_t size = sizeof(txData);
   txData.toCharArray(utf8String, size);
   blinkWholeSequence(utf8String);
-  setState(ARDUINO_TX_ENDED);
+  setState(MICRO_TX_ENDED);
 }
 
 void endTx(void) {
-  setState(ARDUINO_EXIT);
+  setState(MICRO_EXIT);
 }
 
 void startRx(void) {
@@ -390,19 +390,19 @@ void startRx(void) {
   char tmpData = B00000000;
   int index = 0;
   int seqNum = 0;
-  while (state != ARDUINO_RX_ENDED) {
+  while (state != MICRO_RX_ENDED) {
     switch (state){
-      case ARDUINO_RX_WAITING:
+      case MICRO_RX_WAITING:
         int photocellReading = analogRead(PHOTOCELL_PIN);
         if (bitIsSet(photocellReading)) {
           startTime = millis();
           bitSet(tmpData, index);
-          setState(ARDUINO_RX_STARTING);
+          setState(MICRO_RX_STARTING);
           index++;
           seqNum++;
         }
         break;
-      case ARDUINO_RX_STARTING:
+      case MICRO_RX_STARTING:
         if (millis() - startTime > seqNum * (((double) 1000)/((double) txRate))) {
           int photocellReading = analogRead(PHOTOCELL_PIN);
           if (bitIsSet(photocellReading)) {
@@ -412,9 +412,9 @@ void startRx(void) {
           seqNum++;
           if (index == 7) {
             if (tmpData == startSeq) {
-              setState(ARDUINO_RX_STARTED);
+              setState(MICRO_RX_STARTED);
             } else {
-              setState(ARDUINO_RX_WAITING);
+              setState(MICRO_RX_WAITING);
               seqNum = 0;
               Serial.println("UNKNOWN startSeq: " + tmpData);
             }
@@ -424,7 +424,7 @@ void startRx(void) {
         }
         break;
       
-      case ARDUINO_RX_STARTED:
+      case MICRO_RX_STARTED:
         if (millis() - startTime > seqNum * (((double) 1000)/((double) txRate))) {
           int photocellReading = analogRead(PHOTOCELL_PIN);
           if (bitIsSet(photocellReading)) {
@@ -438,8 +438,8 @@ void startRx(void) {
               for (int i = 0; i < sizeof(rxData); i++) {
                 s += rxData[i];
               }
-              firebaseSetString("/variables/arduino/tx_result", s);
-              setState(ARDUINO_RX_ENDED);
+              firebaseSetString("/variables/micro/tx_result", s);
+              setState(MICRO_RX_ENDED);
             } else {
               rxData[(int) seqNum / 8] = tmpData;
             }
@@ -454,5 +454,5 @@ void startRx(void) {
 }
 
 void endRx(void) {
-  setState(ARDUINO_EXIT);
+  setState(MICRO_EXIT);
 }
